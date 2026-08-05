@@ -164,6 +164,13 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
             50% { box-shadow: 0 0 0 12px rgba(255,107,107,0); }
         }
+        .scan-guide {
+            display: none;
+            background: #f0faf4; border-radius: 8px;
+            padding: 12px 14px; margin-top: 12px;
+            font-size: 13px; color: #333; text-align: center; line-height: 1.8;
+        }
+        .scan-guide.show { display: block; }
         .btn-wechat {
             display: none;
         }
@@ -199,11 +206,16 @@
             <span class="step">3</span> 在浏览器中点击按钮即可跳转微信
         </div>
 
-        <!-- 按钮：仅在手机上显示 -->
+        <!-- 按钮：打开微信扫一扫 -->
         <a class="btn btn-primary btn-wechat" id="btnWechat"
-           href="weixin://contacts/profile/Wang-CHIP" onclick="openWechat(event)">
-            打开微信添加好友
+           href="weixin://dl/scan" onclick="openWechatScan(event)">
+            打开微信扫一扫
         </a>
+
+        <!-- 扫码引导 -->
+        <div class="scan-guide" id="scanGuide">
+            微信扫一扫 &#8594; <strong>扫描上方二维码</strong> &#8594; 添加好友
+        </div>
 
         <!-- 复制微信号 -->
         <button class="btn btn-outline" onclick="copyWechatId()">
@@ -217,11 +229,19 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <!-- 唤起失败提示 -->
+    <!-- 唤起微信后的引导 -->
     <div class="overlay" id="overlay">
         <div class="overlay-box">
-            <div class="icon">&#x1F50D;</div>
-            <p>未能自动打开微信<br>请<strong>截图保存二维码</strong>，用微信扫一扫即可添加好友</p>
+            <div class="icon">&#x1F4F1;</div>
+            <p><strong>微信扫一扫已打开</strong></p>
+            <p style="text-align:left;font-size:14px;color:#555;line-height:2;">
+                <span class="step">1</span> 将手机摄像头对准<strong>上方二维码</strong><br>
+                <span class="step">2</span> 微信会自动识别并跳转到资料页<br>
+                <span class="step">3</span> 点击「<strong>添加到通讯录</strong>」
+            </p>
+            <p style="font-size:13px;color:#999;margin-top:12px;">
+                如果只有一台手机，可以先截图二维码，再从相册扫描
+            </p>
             <button class="btn-close" onclick="document.getElementById('overlay').classList.remove('show')">
                 知道了
             </button>
@@ -247,8 +267,10 @@
                 document.getElementById('btnWechat').classList.remove('show');
                 document.getElementById('footerHint').innerText = '在微信内打开？长按上方二维码识别即可添加';
             } else if (isMobile) {
-                // 手机浏览器：显示「打开微信」按钮
+                // 手机浏览器：显示按钮 + 扫码引导
                 document.getElementById('btnWechat').classList.add('show');
+                document.getElementById('scanGuide').classList.add('show');
+                document.getElementById('footerHint').innerText = '用微信扫一扫扫描上方二维码即可';
             } else {
                 // PC 端：显示提示
                 document.getElementById('pcTip').classList.add('show');
@@ -256,20 +278,19 @@
             }
         })();
 
-        function openWechat(e) {
+        function openWechatScan(e) {
             e.preventDefault();
 
-            // 尝试用 weixin://contacts/profile/ 跳转到用户资料页
-            var profileUrl = 'weixin://contacts/profile/Wang-CHIP';
-            window.location.href = profileUrl;
+            // weixin://dl/scan 直接打开微信扫一扫页面
+            window.location.href = 'weixin://dl/scan';
 
             // Android 兼容：用 iframe 再试一次
             var iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = profileUrl;
+            iframe.src = 'weixin://dl/scan';
             document.body.appendChild(iframe);
 
-            // 2.5 秒后如果页面还在，说明唤起失败，弹窗提示扫码
+            // 2.5 秒后如果页面还在，说明唤起失败
             setTimeout(function() {
                 document.body.removeChild(iframe);
                 if (document.hidden || document.webkitHidden) return;
