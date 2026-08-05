@@ -210,7 +210,7 @@
 
         <!-- 按钮：打开微信/企业微信 -->
         <a class="btn btn-primary btn-action" id="btnAction"
-           href="https://work.weixin.qq.com/u/vc967f7429b0dc5fce?v=5.0.9.224799&bb=31aa0b4d49" onclick="handleOpenApp(event)">
+           href="wxwork://" onclick="handleOpenApp(event)">
             打开企业微信添加好友
         </a>
 
@@ -286,31 +286,32 @@
         })();
 
         function handleOpenApp(e) {
-            // 策略说明：
-            //   企业微信：href 是解码出的 HTTP 链接，系统优先用 App Link 唤起；
-            //             JS 同时用 wxwork:// 做降级
-            //   个人微信：href 是 weixin://，需要 JS 辅助触发
+            // 企业微信策略:
+            //   1. wxwork:// 唤起 App（已验证有效）
+            //   2. Android 上尝试 Intent URL 直接打开资料页
+            //   个人微信策略: weixin:// + iframe 双保险
             e.preventDefault();
 
-            if (isWorkWechat && hasDeepLink) {
+            if (isWorkWechat) {
                 // --- 企业微信模式 ---
-                // 让浏览器先自然处理 href（可能触发 App Link/Universal Link）
-                try { window.location.href = deepLink; } catch(ex) {}
+                // 步骤 1: wxwork:// 唤起 App
+                try { window.location.href = schemeUrl; } catch(ex) {}
 
-                // 500ms 后降级：用 wxwork:// 再试一次
-                setTimeout(function() {
-                    try {
-                        var iframe = document.createElement('iframe');
-                        iframe.style.display = 'none';
-                        iframe.src = schemeUrl;
-                        document.body.appendChild(iframe);
-                        setTimeout(function() {
-                            if (document.body.contains(iframe)) document.body.removeChild(iframe);
-                        }, 2000);
-                    } catch(ex) {}
-                }, 500);
+                // 步骤 2: Android 上尝试 Intent URL（带 HTTP 链接，可能直接打开资料页）
+                var isAndroid = /Android/i.test(navigator.userAgent);
+                if (isAndroid && hasDeepLink) {
+                    setTimeout(function() {
+                        try {
+                            var intentUrl = 'intent://work.weixin.qq.com/u/' +
+                                deepLink.split('/u/')[1].split('?')[0] +
+                                '?' + deepLink.split('?')[1] +
+                                '#Intent;scheme=https;package=com.tencent.wework;end';
+                            window.location.href = intentUrl;
+                        } catch(ex) {}
+                    }, 800);
+                }
 
-                // 2 秒后如果页面还在前台，弹引导
+                // 2 秒后页面还在 → 弹出搜索引导
                 setTimeout(function() {
                     if (document.hidden || document.webkitHidden) return;
                     document.getElementById('overlay').classList.add('show');
