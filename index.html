@@ -206,15 +206,15 @@
             <span class="step">3</span> 在浏览器中点击按钮即可跳转微信
         </div>
 
-        <!-- 按钮：打开微信扫一扫 -->
+        <!-- 按钮：跳转微信添加好友 -->
         <a class="btn btn-primary btn-wechat" id="btnWechat"
-           href="weixin://" onclick="openWechatScan(event)">
-            打开微信，扫一扫添加
+           href="https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2" onclick="openWechatScan(event)">
+            点击添加微信好友
         </a>
 
         <!-- 扫码引导 -->
         <div class="scan-guide" id="scanGuide">
-            微信扫一扫 &#8594; <strong>扫描上方二维码</strong> &#8594; 添加好友
+            打不开？请用微信<strong>扫一扫</strong>扫描上方二维码
         </div>
 
         <!-- 复制微信号 -->
@@ -281,13 +281,14 @@
         function openWechatScan(e) {
             e.preventDefault();
 
-            // weixin:// 唤起微信
-            window.location.href = 'weixin://';
+            // 用二维码中解码出的真实链接（如 http://weixin.qq.com/r/xxx）
+            var targetUrl = 'https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2';
+            window.location.href = targetUrl;
 
             // Android 兼容：用 iframe 再试一次
             var iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = 'weixin://';
+            iframe.src = targetUrl;
             document.body.appendChild(iframe);
 
             // 2.5 秒后如果页面还在，说明唤起失败
