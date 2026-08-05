@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>添加微信好友 - CHIP.</title>
+    <title>添加好友 - CHIP.</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -29,7 +29,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #07c160, #06ad56);
+            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
             margin: 0 auto 16px;
             display: flex;
             align-items: center;
@@ -101,7 +101,6 @@
             color: #ccc;
             margin-top: 16px;
         }
-        /* 移动端遮罩提示 */
         .overlay {
             display: none;
             position: fixed;
@@ -117,19 +116,22 @@
             border-radius: 16px;
             padding: 30px 24px;
             text-align: center;
-            max-width: 300px;
+            max-width: 320px;
             width: 90%;
         }
         .overlay-box .icon { font-size: 48px; margin-bottom: 12px; }
-        .overlay-box p { font-size: 15px; color: #333; margin-bottom: 20px; line-height: 1.6; }
+        .overlay-box p { font-size: 15px; color: #333; margin-bottom: 8px; line-height: 1.8; }
+        .overlay-box .step {
+            display: inline-block;
+            background: #07c160; color: #fff;
+            border-radius: 50%; width: 22px; height: 22px;
+            line-height: 22px; text-align: center; margin-right: 6px;
+            font-weight: bold; font-size: 12px;
+        }
         .overlay-box .btn-close {
-            background: #07c160;
-            color: #fff;
-            border: none;
-            padding: 10px 40px;
-            border-radius: 8px;
-            font-size: 15px;
-            cursor: pointer;
+            background: #07c160; color: #fff;
+            border: none; padding: 10px 40px; border-radius: 8px;
+            font-size: 15px; cursor: pointer; margin-top: 12px;
         }
         .toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -153,7 +155,7 @@
             animation: pulse 2s infinite;
         }
         .app-browser-tip.show { display: block; }
-        .app-browser-tip .step {
+        .app-browser-tip .tip-step {
             display: inline-block;
             background: rgba(255,255,255,0.25); color: #fff;
             border-radius: 50%; width: 22px; height: 22px;
@@ -166,15 +168,15 @@
         }
         .scan-guide {
             display: none;
-            background: #f0faf4; border-radius: 8px;
+            background: #f0f4ff; border-radius: 8px;
             padding: 12px 14px; margin-top: 12px;
             font-size: 13px; color: #333; text-align: center; line-height: 1.8;
         }
         .scan-guide.show { display: block; }
-        .btn-wechat {
+        .btn-action {
             display: none;
         }
-        .btn-wechat.show { display: block; }
+        .btn-action.show { display: block; }
     </style>
 </head>
 <body>
@@ -195,31 +197,31 @@
 
         <!-- PC 端提示 -->
         <div class="pc-tip" id="pcTip">
-            &#x1F4BB; 你正在用电脑访问，请用<strong>手机微信</strong>扫描上方二维码即可添加好友
+            &#x1F4BB; 你正在用电脑访问，请用<strong>手机</strong>扫描上方二维码即可添加好友
         </div>
 
         <!-- App 内置浏览器提示（抖音等） -->
         <div class="app-browser-tip" id="appBrowserTip">
             &#x26A0;&#xFE0F; <strong>你正在 App 内置浏览器中访问</strong><br>
-            <span class="step">1</span> 点击右上角 <strong>&#x22EF;</strong> 或 <strong>&#x2197;</strong><br>
-            <span class="step">2</span> 选择「<strong>在浏览器中打开</strong>」<br>
-            <span class="step">3</span> 在浏览器中点击按钮即可跳转微信
+            <span class="tip-step">1</span> 点击右上角 <strong>&#x22EF;</strong> 或 <strong>&#x2197;</strong><br>
+            <span class="tip-step">2</span> 选择「<strong>在浏览器中打开</strong>」<br>
+            <span class="tip-step">3</span> 在浏览器中点击按钮即可跳转微信
         </div>
 
-        <!-- 按钮：跳转微信添加好友 -->
-        <a class="btn btn-primary btn-wechat" id="btnWechat"
-           href="https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2" onclick="openWechatScan(event)">
-            点击添加微信好友
+        <!-- 按钮：打开微信/企业微信 -->
+        <a class="btn btn-primary btn-action" id="btnAction"
+           href="weixin://" onclick="handleOpenApp(event)">
+            打开微信添加好友
         </a>
 
-        <!-- 扫码引导 -->
+        <!-- 操作引导 -->
         <div class="scan-guide" id="scanGuide">
-            打不开？请用微信<strong>扫一扫</strong>扫描上方二维码
+            微信打开后：通讯录 → 添加朋友 → 搜索添加
         </div>
 
-        <!-- 复制微信号 -->
+        <!-- 复制账号 -->
         <button class="btn btn-outline" onclick="copyWechatId()">
-            复制微信号
+            复制账号
         </button>
 
         <div class="welcome">你好，很高兴认识你！扫码或点击按钮添加我好友吧~</div>
@@ -229,18 +231,16 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <!-- 唤起微信后的引导 -->
+    <!-- 唤起后的引导遮罩 -->
     <div class="overlay" id="overlay">
         <div class="overlay-box">
-            <div class="icon">&#x1F4F1;</div>
-            <p><strong>微信扫一扫已打开</strong></p>
-            <p style="text-align:left;font-size:14px;color:#555;line-height:2;">
-                <span class="step">1</span> 将手机摄像头对准<strong>上方二维码</strong><br>
-                <span class="step">2</span> 微信会自动识别并跳转到资料页<br>
-                <span class="step">3</span> 点击「<strong>添加到通讯录</strong>」
+            <div class="icon">&#x1F44D;</div>
+            <p><strong>微信已打开</strong></p>
+            <p style="text-align:left;font-size:14px;color:#555;line-height:2.2;">
+                如果未自动弹出资料页，请：<br>底部点击「通讯录」→「添加朋友」<br>搜索「Wang-CHIP」即可添加
             </p>
             <p style="font-size:13px;color:#999;margin-top:12px;">
-                如果只有一台手机，可以先截图二维码，再从相册扫描
+                也可以让朋友用手机扫描上方二维码，一步到位
             </p>
             <button class="btn-close" onclick="document.getElementById('overlay').classList.remove('show')">
                 知道了
@@ -249,58 +249,81 @@
     </div>
 
     <script>
-        // 判断设备类型
+        var isWorkWechat = false;
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         var isWechat = /MicroMessenger/i.test(navigator.userAgent);
+        var isWxWork = /wxwork/i.test(navigator.userAgent);
         var ua = navigator.userAgent.toLowerCase();
-        // 检测常见 App 内置浏览器：抖音、快手、微博、QQ、小红书等
-        var isAppBrowser = /aweme|douyin|kuaishou|kwai|weibo|qq/i.test(ua) && !isWechat;
+        var isAppBrowser = /aweme|douyin|kuaishou|kwai|weibo|qq/i.test(ua) && !isWechat && !isWxWork;
+
+        // 二维码中解码出的直达链接
+        var deepLink = "";
+        var personalLink = "https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2";
+        var schemeUrl = "weixin://";
+        var hasDeepLink = deepLink.length > 0;
 
         (function() {
             if (isAppBrowser) {
-                // 抖音等 App 内置浏览器：weixin:// 被拦截，引导用户用浏览器打开
+                // App 内置浏览器：引导用系统浏览器打开
                 document.getElementById('appBrowserTip').classList.add('show');
-                document.getElementById('btnWechat').classList.remove('show');
-                document.getElementById('footerHint').innerText = '或截图保存二维码，在微信中扫一扫';
-            } else if (isWechat) {
-                // 在微信内置浏览器中
-                document.getElementById('btnWechat').classList.remove('show');
-                document.getElementById('footerHint').innerText = '在微信内打开？长按上方二维码识别即可添加';
+                document.getElementById('btnAction').classList.remove('show');
+                document.getElementById('footerHint').innerText = '或截图保存二维码，用' + (isWorkWechat ? '企业微信' : '微信') + '扫一扫';
+            } else if (isWechat || isWxWork) {
+                // 微信/企业微信内置浏览器中：隐藏按钮，提示长按扫码
+                document.getElementById('btnAction').classList.remove('show');
+                var appName = isWxWork ? '企业微信' : '微信';
+                document.getElementById('footerHint').innerText = '在' + appName + '内打开？长按上方二维码识别即可添加';
             } else if (isMobile) {
-                // 手机浏览器：显示按钮 + 扫码引导
-                document.getElementById('btnWechat').classList.add('show');
+                // 手机浏览器：显示按钮
+                document.getElementById('btnAction').classList.add('show');
                 document.getElementById('scanGuide').classList.add('show');
-                document.getElementById('footerHint').innerText = '用微信扫一扫扫描上方二维码即可';
+                document.getElementById('footerHint').innerText = '用' + (isWorkWechat ? '企业微信' : '微信') + '扫一扫扫描上方二维码即可';
             } else {
-                // PC 端：显示提示
+                // PC 端
                 document.getElementById('pcTip').classList.add('show');
-                document.getElementById('footerHint').innerText = '用手机微信扫码即可添加';
+                document.getElementById('footerHint').innerText = '用手机' + (isWorkWechat ? '企业微信' : '微信') + '扫码即可添加';
             }
         })();
 
-        function openWechatScan(e) {
+        function handleOpenApp(e) {
             e.preventDefault();
-            var qrLink = 'https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2';
 
-            // 先用解码出的微信链接（iOS Universal Link / Android Deep Link 可直达资料页）
-            window.location.href = qrLink;
+            // 策略 1: URL scheme 打开（wxwork:// 或 weixin://）
+            try {
+                window.location.href = schemeUrl;
+            } catch(ex) {}
 
-            // 800ms 后如果还在，用 weixin:// 作为兜底
-            setTimeout(function() {
-                if (document.hidden || document.webkitHidden) return;
-                window.location.href = 'weixin://';
+            // 策略 2: 如果有二维码解码出的直达链接，用 iframe 触发
+            if (hasDeepLink) {
+                var iframe2 = document.createElement('iframe');
+                iframe2.style.display = 'none';
+                iframe2.src = deepLink;
+                document.body.appendChild(iframe2);
+                setTimeout(function() {
+                    if (document.body.contains(iframe2)) {
+                        document.body.removeChild(iframe2);
+                    }
+                }, 2000);
+            }
+
+            // 策略 3: 如果是个人的 weixin:// 再用 iframe 保底
+            if (!isWorkWechat && !hasDeepLink) {
                 var iframe = document.createElement('iframe');
                 iframe.style.display = 'none';
-                iframe.src = 'weixin://';
+                iframe.src = schemeUrl;
                 document.body.appendChild(iframe);
-                setTimeout(function() { document.body.removeChild(iframe); }, 1000);
-            }, 800);
+                setTimeout(function() {
+                    if (document.body.contains(iframe)) {
+                        document.body.removeChild(iframe);
+                    }
+                }, 2000);
+            }
 
-            // 3 秒后如果还在，弹窗提示扫码
+            // 1.5 秒后如果页面还在前台，弹出引导
             setTimeout(function() {
                 if (document.hidden || document.webkitHidden) return;
                 document.getElementById('overlay').classList.add('show');
-            }, 3000);
+            }, 1500);
         }
 
         function showToast(msg) {
@@ -314,7 +337,7 @@
             var id = 'Wang-CHIP';
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(id).then(function() {
-                    showToast('微信号已复制: ' + id);
+                    showToast('已复制: ' + id);
                 }).catch(function() {
                     fallbackCopy(id);
                 });
@@ -330,8 +353,8 @@
             document.body.appendChild(ta);
             ta.focus();
             ta.select();
-            try { document.execCommand('copy'); showToast('微信号已复制: ' + text); }
-            catch(e) { alert('微信号: ' + text); }
+            try { document.execCommand('copy'); showToast('已复制: ' + text); }
+            catch(e) { alert('账号: ' + text); }
             document.body.removeChild(ta);
         }
     </script>
