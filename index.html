@@ -174,7 +174,7 @@
 
         <!-- 按钮：仅在手机上显示 -->
         <a class="btn btn-primary btn-wechat" id="btnWechat"
-           href="weixin://" onclick="openWechat(event)">
+           href="weixin://contacts/profile/Wang-CHIP" onclick="openWechat(event)">
             打开微信添加好友
         </a>
 
@@ -224,17 +224,17 @@
         function openWechat(e) {
             e.preventDefault();
 
-            // 方案1：尝试用 weixin:// 打开微信（iOS 支持较好）
-            var startTime = Date.now();
-            window.location.href = 'weixin://';
+            // 尝试用 weixin://contacts/profile/ 跳转到用户资料页
+            var profileUrl = 'weixin://contacts/profile/Wang-CHIP';
+            window.location.href = profileUrl;
 
-            // 方案2：Android 备用方案，用 intent 协议
+            // Android 兼容：用 iframe 再试一次
             var iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = 'weixin://';
+            iframe.src = profileUrl;
             document.body.appendChild(iframe);
 
-            // 2.5 秒后如果页面还在，说明唤起失败
+            // 2.5 秒后如果页面还在，说明唤起失败，弹窗提示扫码
             setTimeout(function() {
                 document.body.removeChild(iframe);
                 if (document.hidden || document.webkitHidden) return;
