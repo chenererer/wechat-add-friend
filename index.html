@@ -145,6 +145,25 @@
             font-size: 13px; color: #ad6800; text-align: left; line-height: 1.6;
         }
         .pc-tip.show { display: block; }
+        .app-browser-tip {
+            display: none;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 12px; padding: 16px; margin-bottom: 20px;
+            color: #fff; font-size: 14px; line-height: 1.8;
+            animation: pulse 2s infinite;
+        }
+        .app-browser-tip.show { display: block; }
+        .app-browser-tip .step {
+            display: inline-block;
+            background: rgba(255,255,255,0.25); color: #fff;
+            border-radius: 50%; width: 22px; height: 22px;
+            line-height: 22px; text-align: center; margin-right: 6px;
+            font-weight: bold; font-size: 12px;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(255,107,107,0); }
+        }
         .btn-wechat {
             display: none;
         }
@@ -170,6 +189,14 @@
         <!-- PC 端提示 -->
         <div class="pc-tip" id="pcTip">
             &#x1F4BB; 你正在用电脑访问，请用<strong>手机微信</strong>扫描上方二维码即可添加好友
+        </div>
+
+        <!-- App 内置浏览器提示（抖音等） -->
+        <div class="app-browser-tip" id="appBrowserTip">
+            &#x26A0;&#xFE0F; <strong>你正在 App 内置浏览器中访问</strong><br>
+            <span class="step">1</span> 点击右上角 <strong>&#x22EF;</strong> 或 <strong>&#x2197;</strong><br>
+            <span class="step">2</span> 选择「<strong>在浏览器中打开</strong>」<br>
+            <span class="step">3</span> 在浏览器中点击按钮即可跳转微信
         </div>
 
         <!-- 按钮：仅在手机上显示 -->
@@ -205,9 +232,17 @@
         // 判断设备类型
         var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         var isWechat = /MicroMessenger/i.test(navigator.userAgent);
+        var ua = navigator.userAgent.toLowerCase();
+        // 检测常见 App 内置浏览器：抖音、快手、微博、QQ、小红书等
+        var isAppBrowser = /aweme|douyin|kuaishou|kwai|weibo|qq/i.test(ua) && !isWechat;
 
         (function() {
-            if (isWechat) {
+            if (isAppBrowser) {
+                // 抖音等 App 内置浏览器：weixin:// 被拦截，引导用户用浏览器打开
+                document.getElementById('appBrowserTip').classList.add('show');
+                document.getElementById('btnWechat').classList.remove('show');
+                document.getElementById('footerHint').innerText = '或截图保存二维码，在微信中扫一扫';
+            } else if (isWechat) {
                 // 在微信内置浏览器中
                 document.getElementById('btnWechat').classList.remove('show');
                 document.getElementById('footerHint').innerText = '在微信内打开？长按上方二维码识别即可添加';
