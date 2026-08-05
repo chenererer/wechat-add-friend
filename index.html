@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>添加微信好友 - CHIP.</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                         "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 380px;
+            padding: 40px 30px 30px;
+            text-align: center;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #07c160, #06ad56);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #fff;
+        }
+        .nickname {
+            font-size: 22px;
+            font-weight: 700;
+            color: #191919;
+            margin-bottom: 4px;
+        }
+        .wechat-id {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+        .qr-wrapper {
+            background: #f7f7f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .qr-wrapper img {
+            width: 200px;
+            height: 200px;
+            display: block;
+            border-radius: 8px;
+        }
+        .qr-hint {
+            font-size: 13px;
+            color: #888;
+            margin-top: 8px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .btn-primary {
+            background: #07c160;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #06ad56; }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-outline {
+            background: #fff;
+            color: #07c160;
+            border: 1.5px solid #07c160;
+        }
+        .welcome {
+            font-size: 13px;
+            color: #aaa;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .footer {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 16px;
+        }
+        /* 移动端遮罩提示 */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .overlay-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px 24px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+        }
+        .overlay-box .icon { font-size: 48px; margin-bottom: 12px; }
+        .overlay-box p { font-size: 15px; color: #333; margin-bottom: 20px; line-height: 1.6; }
+        .overlay-box .btn-close {
+            background: #07c160;
+            color: #fff;
+            border: none;
+            padding: 10px 40px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <!-- 头像 -->
+        <div class="avatar">💬</div>
+
+        <!-- 昵称 -->
+        <div class="nickname">CHIP.</div>
+        <div class="wechat-id">微信号：Wang-CHIP</div>
+
+        <!-- 二维码 -->
+        <div class="qr-wrapper">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADVklEQVR4nO1cS26kQAy1AamXtJQD5Chws9EcaW4AR8kBRoLlSCCP/KkPnU1Qo266y15EVUVZocyL/xUk2E1jtZ8HwJmMXBBGLoiXEcSMRr2Mrqv+0Ac9rAjjFSBsal7iTPvJmTJB1CQkcxrmC9EANSF+8trcAPb8pJNNU2DaTc70SoJA/dtvF/7xT7UFdPz1x09igDCpynjG6+0kZzpMEDPDYm5AVcaIDQgY8Nd09G/6KTnTwwXR3Myxo7UBmD9YXTDNCDBet5Dw7/T2iCCb1YyDmrD7w55l+xfzrS3vmh/7epUzPUMQq0YRMsdeTAfUBN3XhaCbZNQAjLLp+vjX203OdI8ggL7REh4wGBQbk4UjSoOL3OiNETG0RCm+tCBTwlIGAwej4mPa6ORnqpzpPkRMkmxYdCTfXMEwtLKWT23kIjd6R0FA0AdGqgUEB5KPMDAE5eE6ohw/YtHcg/kRqg8YAkFRJKi4jigAEWD6QCiaiQQQMMPiVqOMfMTaEOcZiEdhfUXqCAChnRgg8qAmfIkzVc50f12jl9IWSgJiRfUiRy6AJuXBU690vT/2QF0I0oxD7jNkW/LY1P2IIhABmpqUODTmpYAjDA0z1NuksHbyM1XOdESGalFVYHYhTAUlGWg8H1FWznLiBXYh2EIECATDYolLtxpl+BFDlpeKVkNKGhEbceRWo4gM1WTf3FJSwcdMW3TkOqKUDBWI4xDrnGJEZM2CkNy9dB1RQqwB2mIZPUs1GEue4/a6RjmVrvo2ba2tthJmRL1hePH+iDJqnxTjS1MFYjWYzIhs7IfnI4rIUIHlI1KJM3VTWbOMkMcaRVgNirC4yVRu+mmi33nyM1XOdFRdYwprUumKfVXJ5fS6xvtjD5IWEDJtsU1ApLZLNSwnP1PlTEf1Yk92vTM8iJYk+RZuNUrqs+xiL3bmY4bOqbzt8uRnqpzpCM+SQuVC81JmOlKO2z3LQrAH+UUdCvfAo+mwUmhSD64jimKaG70HTr+vWwiEjOZzX++n5EzH6YglNsvEjhlJamv06Z5lgXfDCWC+EPLVX4Q2tGZ3Xwg09nWoiJ38TJUz3dudj5ulFQlgaRglDJAPgrGvF+7TBxm5yN8ae+j/vfAlvlPlTEouCKPHCeI/OeRhLHHYMCwAAAAASUVORK5CYII=" alt="微信二维码">
+            <div class="qr-hint">📱 扫描二维码添加好友</div>
+        </div>
+
+        <!-- 按钮：尝试唤起微信 -->
+        <a class="btn btn-primary" href="weixin://contacts/profile/Wang-CHIP" 
+           onclick="handleWechatClick(event)">
+            打开微信添加好友
+        </a>
+
+        <!-- 复制微信号 -->
+        <button class="btn btn-outline" onclick="copyWechatId()">
+            复制微信号
+        </button>
+
+        <div class="welcome">你好，很高兴认识你！扫码或点击按钮添加我好友吧~</div>
+        <div class="footer">长按二维码也可识别添加</div>
+    </div>
+
+    <!-- 未安装微信时的提示 -->
+    <div class="overlay" id="overlay">
+        <div class="overlay-box">
+            <div class="icon">🔍</div>
+            <p>请使用手机微信扫描上方二维码，即可添加好友</p>
+            <button class="btn-close" onclick="document.getElementById('overlay').classList.remove('show')">
+                知道了
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function handleWechatClick(e) {
+            // 先尝试用 weixin:// 唤起微信
+            // 如果 500ms 后页面还在，说明可能没装微信（PC端），给出提示
+            var start = Date.now();
+            // 不阻止默认行为，让浏览器尝试打开 weixin://
+            setTimeout(function() {
+                // 如果 500ms 内离开了页面，说明成功跳转了
+                // 如果还在，显示提示
+                if (document.hidden || document.webkitHidden) return;
+                var overlay = document.getElementById('overlay');
+                overlay.classList.add('show');
+            }, 500);
+        }
+
+        function copyWechatId() {
+            var id = 'Wang-CHIP';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(id).then(function() {
+                    alert('微信号已复制：' + id);
+                });
+            } else {
+                // 降级方案
+                var ta = document.createElement('textarea');
+                ta.value = id;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert('微信号已复制：' + id);
+            }
+        }
+
+        // 检测是否为微信内置浏览器，是则自动提示
+        (function() {
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.indexOf('micromessenger') > -1) {
+                // 在微信内，长按二维码即可
+                console.log('在微信内打开，长按二维码即可识别');
+            }
+        })();
+    </script>
+</body>
+</html>
