@@ -131,13 +131,31 @@
             font-size: 15px;
             cursor: pointer;
         }
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 10px 24px;
+            border-radius: 20px; font-size: 14px; z-index: 10000;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .toast.show { opacity: 1; }
+        .pc-tip {
+            display: none;
+            background: #fffbe6; border: 1px solid #ffe58f;
+            border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;
+            font-size: 13px; color: #ad6800; text-align: left; line-height: 1.6;
+        }
+        .pc-tip.show { display: block; }
+        .btn-wechat {
+            display: none;
+        }
+        .btn-wechat.show { display: block; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <!-- 头像 -->
-        <div class="avatar">💬</div>
+        <div class="avatar">&#x1F4AC;</div>
 
         <!-- 昵称 -->
         <div class="nickname">CHIP.</div>
@@ -146,12 +164,17 @@
         <!-- 二维码 -->
         <div class="qr-wrapper">
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADVklEQVR4nO1cS26kQAy1AamXtJQD5Chws9EcaW4AR8kBRoLlSCCP/KkPnU1Qo266y15EVUVZocyL/xUk2E1jtZ8HwJmMXBBGLoiXEcSMRr2Mrqv+0Ac9rAjjFSBsal7iTPvJmTJB1CQkcxrmC9EANSF+8trcAPb8pJNNU2DaTc70SoJA/dtvF/7xT7UFdPz1x09igDCpynjG6+0kZzpMEDPDYm5AVcaIDQgY8Nd09G/6KTnTwwXR3Myxo7UBmD9YXTDNCDBet5Dw7/T2iCCb1YyDmrD7w55l+xfzrS3vmh/7epUzPUMQq0YRMsdeTAfUBN3XhaCbZNQAjLLp+vjX203OdI8ggL7REh4wGBQbk4UjSoOL3OiNETG0RCm+tCBTwlIGAwej4mPa6ORnqpzpPkRMkmxYdCTfXMEwtLKWT23kIjd6R0FA0AdGqgUEB5KPMDAE5eE6ohw/YtHcg/kRqg8YAkFRJKi4jigAEWD6QCiaiQQQMMPiVqOMfMTaEOcZiEdhfUXqCAChnRgg8qAmfIkzVc50f12jl9IWSgJiRfUiRy6AJuXBU690vT/2QF0I0oxD7jNkW/LY1P2IIhABmpqUODTmpYAjDA0z1NuksHbyM1XOdESGalFVYHYhTAUlGWg8H1FWznLiBXYh2EIECATDYolLtxpl+BFDlpeKVkNKGhEbceRWo4gM1WTf3FJSwcdMW3TkOqKUDBWI4xDrnGJEZM2CkNy9dB1RQqwB2mIZPUs1GEue4/a6RjmVrvo2ba2tthJmRL1hePH+iDJqnxTjS1MFYjWYzIhs7IfnI4rIUIHlI1KJM3VTWbOMkMcaRVgNirC4yVRu+mmi33nyM1XOdFRdYwprUumKfVXJ5fS6xvtjD5IWEDJtsU1ApLZLNSwnP1PlTEf1Yk92vTM8iJYk+RZuNUrqs+xiL3bmY4bOqbzt8uRnqpzpCM+SQuVC81JmOlKO2z3LQrAH+UUdCvfAo+mwUmhSD64jimKaG70HTr+vWwiEjOZzX++n5EzH6YglNsvEjhlJamv06Z5lgXfDCWC+EPLVX4Q2tGZ3Xwg09nWoiJ38TJUz3dudj5ulFQlgaRglDJAPgrGvF+7TBxm5yN8ae+j/vfAlvlPlTEouCKPHCeI/OeRhLHHYMCwAAAAASUVORK5CYII=" alt="微信二维码">
-            <div class="qr-hint">📱 扫描二维码添加好友</div>
+            <div class="qr-hint">&#x1F4F1; 扫描二维码添加好友</div>
         </div>
 
-        <!-- 按钮：尝试唤起微信 -->
-        <a class="btn btn-primary" href="weixin://contacts/profile/Wang-CHIP" 
-           onclick="handleWechatClick(event)">
+        <!-- PC 端提示 -->
+        <div class="pc-tip" id="pcTip">
+            &#x1F4BB; 你正在用电脑访问，请用<strong>手机微信</strong>扫描上方二维码即可添加好友
+        </div>
+
+        <!-- 按钮：仅在手机上显示 -->
+        <a class="btn btn-primary btn-wechat" id="btnWechat"
+           href="weixin://" onclick="openWechat(event)">
             打开微信添加好友
         </a>
 
@@ -161,14 +184,17 @@
         </button>
 
         <div class="welcome">你好，很高兴认识你！扫码或点击按钮添加我好友吧~</div>
-        <div class="footer">长按二维码也可识别添加</div>
+        <div class="footer" id="footerHint">长按二维码也可识别添加</div>
     </div>
 
-    <!-- 未安装微信时的提示 -->
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 唤起失败提示 -->
     <div class="overlay" id="overlay">
         <div class="overlay-box">
-            <div class="icon">🔍</div>
-            <p>请使用手机微信扫描上方二维码，即可添加好友</p>
+            <div class="icon">&#x1F50D;</div>
+            <p>未能自动打开微信<br>请<strong>截图保存二维码</strong>，用微信扫一扫即可添加好友</p>
             <button class="btn-close" onclick="document.getElementById('overlay').classList.remove('show')">
                 知道了
             </button>
@@ -176,48 +202,77 @@
     </div>
 
     <script>
-        function handleWechatClick(e) {
-            // 先尝试用 weixin:// 唤起微信
-            // 如果 500ms 后页面还在，说明可能没装微信（PC端），给出提示
-            var start = Date.now();
-            // 不阻止默认行为，让浏览器尝试打开 weixin://
+        // 判断设备类型
+        var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        var isWechat = /MicroMessenger/i.test(navigator.userAgent);
+
+        (function() {
+            if (isWechat) {
+                // 在微信内置浏览器中
+                document.getElementById('btnWechat').classList.remove('show');
+                document.getElementById('footerHint').innerText = '在微信内打开？长按上方二维码识别即可添加';
+            } else if (isMobile) {
+                // 手机浏览器：显示「打开微信」按钮
+                document.getElementById('btnWechat').classList.add('show');
+            } else {
+                // PC 端：显示提示
+                document.getElementById('pcTip').classList.add('show');
+                document.getElementById('footerHint').innerText = '用手机微信扫码即可添加';
+            }
+        })();
+
+        function openWechat(e) {
+            e.preventDefault();
+
+            // 方案1：尝试用 weixin:// 打开微信（iOS 支持较好）
+            var startTime = Date.now();
+            window.location.href = 'weixin://';
+
+            // 方案2：Android 备用方案，用 intent 协议
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'weixin://';
+            document.body.appendChild(iframe);
+
+            // 2.5 秒后如果页面还在，说明唤起失败
             setTimeout(function() {
-                // 如果 500ms 内离开了页面，说明成功跳转了
-                // 如果还在，显示提示
+                document.body.removeChild(iframe);
                 if (document.hidden || document.webkitHidden) return;
-                var overlay = document.getElementById('overlay');
-                overlay.classList.add('show');
-            }, 500);
+                document.getElementById('overlay').classList.add('show');
+            }, 2500);
+        }
+
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 2000);
         }
 
         function copyWechatId() {
             var id = 'Wang-CHIP';
-            if (navigator.clipboard) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(id).then(function() {
-                    alert('微信号已复制：' + id);
+                    showToast('微信号已复制: ' + id);
+                }).catch(function() {
+                    fallbackCopy(id);
                 });
             } else {
-                // 降级方案
-                var ta = document.createElement('textarea');
-                ta.value = id;
-                ta.style.position = 'fixed';
-                ta.style.left = '-9999px';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                alert('微信号已复制：' + id);
+                fallbackCopy(id);
             }
         }
 
-        // 检测是否为微信内置浏览器，是则自动提示
-        (function() {
-            var ua = navigator.userAgent.toLowerCase();
-            if (ua.indexOf('micromessenger') > -1) {
-                // 在微信内，长按二维码即可
-                console.log('在微信内打开，长按二维码即可识别');
-            }
-        })();
+        function fallbackCopy(text) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try { document.execCommand('copy'); showToast('微信号已复制: ' + text); }
+            catch(e) { alert('微信号: ' + text); }
+            document.body.removeChild(ta);
+        }
     </script>
 </body>
 </html>
