@@ -210,7 +210,7 @@
 
         <!-- 按钮：打开微信/企业微信 -->
         <a class="btn btn-primary btn-action" id="btnAction"
-           href="wxwork://" onclick="handleOpenApp(event)">
+           href="https://work.weixin.qq.com/u/vc967f7429b0dc5fce?v=5.0.9.224799&bb=31aa0b4d49" onclick="handleOpenApp(event)">
             打开企业微信添加好友
         </a>
 
@@ -286,44 +286,50 @@
         })();
 
         function handleOpenApp(e) {
+            // 策略说明：
+            //   企业微信：href 是解码出的 HTTP 链接，系统优先用 App Link 唤起；
+            //             JS 同时用 wxwork:// 做降级
+            //   个人微信：href 是 weixin://，需要 JS 辅助触发
             e.preventDefault();
 
-            // 策略 1: URL scheme 打开（wxwork:// 或 weixin://）
-            try {
-                window.location.href = schemeUrl;
-            } catch(ex) {}
+            if (isWorkWechat && hasDeepLink) {
+                // --- 企业微信模式 ---
+                // 让浏览器先自然处理 href（可能触发 App Link/Universal Link）
+                try { window.location.href = deepLink; } catch(ex) {}
 
-            // 策略 2: 如果有二维码解码出的直达链接，用 iframe 触发
-            if (hasDeepLink) {
-                var iframe2 = document.createElement('iframe');
-                iframe2.style.display = 'none';
-                iframe2.src = deepLink;
-                document.body.appendChild(iframe2);
+                // 500ms 后降级：用 wxwork:// 再试一次
                 setTimeout(function() {
-                    if (document.body.contains(iframe2)) {
-                        document.body.removeChild(iframe2);
-                    }
-                }, 2000);
-            }
+                    try {
+                        var iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = schemeUrl;
+                        document.body.appendChild(iframe);
+                        setTimeout(function() {
+                            if (document.body.contains(iframe)) document.body.removeChild(iframe);
+                        }, 2000);
+                    } catch(ex) {}
+                }, 500);
 
-            // 策略 3: 如果是个人的 weixin:// 再用 iframe 保底
-            if (!isWorkWechat && !hasDeepLink) {
+                // 2 秒后如果页面还在前台，弹引导
+                setTimeout(function() {
+                    if (document.hidden || document.webkitHidden) return;
+                    document.getElementById('overlay').classList.add('show');
+                }, 2000);
+            } else {
+                // --- 个人微信模式 ---
+                try { window.location.href = schemeUrl; } catch(ex) {}
                 var iframe = document.createElement('iframe');
                 iframe.style.display = 'none';
                 iframe.src = schemeUrl;
                 document.body.appendChild(iframe);
                 setTimeout(function() {
-                    if (document.body.contains(iframe)) {
-                        document.body.removeChild(iframe);
-                    }
+                    if (document.body.contains(iframe)) document.body.removeChild(iframe);
                 }, 2000);
+                setTimeout(function() {
+                    if (document.hidden || document.webkitHidden) return;
+                    document.getElementById('overlay').classList.add('show');
+                }, 1500);
             }
-
-            // 1.5 秒后如果页面还在前台，弹出引导
-            setTimeout(function() {
-                if (document.hidden || document.webkitHidden) return;
-                document.getElementById('overlay').classList.add('show');
-            }, 1500);
         }
 
         function showToast(msg) {
