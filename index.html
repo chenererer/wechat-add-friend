@@ -208,7 +208,7 @@
 
         <!-- 按钮：跳转微信添加好友 -->
         <a class="btn btn-primary btn-wechat" id="btnWechat"
-           href="https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2" onclick="openWechatScan(event)">
+           href="weixin://" onclick="openWechatScan(event)">
             点击添加微信好友
         </a>
 
@@ -281,22 +281,26 @@
         function openWechatScan(e) {
             e.preventDefault();
 
-            // 用二维码中解码出的真实链接（如 http://weixin.qq.com/r/xxx）
-            var targetUrl = 'https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2';
-            window.location.href = targetUrl;
-
-            // Android 兼容：用 iframe 再试一次
+            // 策略1：用 weixin:// 唤起微信 App
+            window.location.href = 'weixin://';
             var iframe = document.createElement('iframe');
             iframe.style.display = 'none';
-            iframe.src = targetUrl;
+            iframe.src = 'weixin://';
             document.body.appendChild(iframe);
 
-            // 2.5 秒后如果页面还在，说明唤起失败
+            // 策略2：800ms 后用解码出的微信链接再试（微信打开后可能通过 Universal Link 处理）
+            var qrLink = 'https://u.wechat.com/EBR8LXj3B65dWwuEons7jwc?s=2';
             setTimeout(function() {
                 document.body.removeChild(iframe);
+                // 微信已打开时，用真实链接尝试跳转到添加好友页
+                window.location.href = qrLink;
+            }, 800);
+
+            // 3 秒后如果页面还在，弹窗提示扫码
+            setTimeout(function() {
                 if (document.hidden || document.webkitHidden) return;
                 document.getElementById('overlay').classList.add('show');
-            }, 2500);
+            }, 3000);
         }
 
         function showToast(msg) {
